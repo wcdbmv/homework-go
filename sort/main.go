@@ -18,7 +18,7 @@ func init() {
 	flag.BoolVar(&flags.unique,          "u", false, "output only the first of an equal run")
 	flag.BoolVar(&flags.reverse,         "r", false, "reverse the result of comparisons")
 	flag.BoolVar(&flags.numeric,         "n", false, "compare according to string numerical value")
-	flag.IntVar(&flags.column,           "k", 0,     "sort by k column")
+	flag.UintVar(&flags.column,           "k", 0,     "sort by k column")
 	flag.StringVar(&output      ,        "o", "",    "write result to FILE instead of standard output")
 }
 
@@ -46,9 +46,6 @@ func checkArgs() error {
 	if len(flag.Args()) != 1 {
 		flag.Usage()
 		return errors.New("flag.Args() != 1")
-	}
-	if flags.column < 0 {
-		return errors.New("column cannot be non-positive")
 	}
 	return nil
 }

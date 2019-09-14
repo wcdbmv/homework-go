@@ -13,7 +13,7 @@ type Flags struct {
 	unique          bool
 	reverse         bool
 	numeric         bool
-	column          int
+	column          uint
 }
 
 type StringMap struct {
@@ -65,11 +65,11 @@ func link(lines []string) []StringMap {
 	return mappedLines
 }
 
-func extractColumn(mappedLines []StringMap, k int) error {
+func extractColumn(mappedLines []StringMap, k uint) error {
 	for i := range mappedLines {
 		words := strings.Fields(mappedLines[i].key)
-		if len(words) < k {
-			return errors.New(fmt.Sprint("Not enough columns in row %i", i))
+		if len(words) < int(k) {
+			return errors.New(fmt.Sprint("Not enough columns in row ", i))
 		}
 		mappedLines[i].key = words[k - 1]
 	}

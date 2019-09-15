@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"flag"
-	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
+	"os"
 	"strings"
 )
 
@@ -18,7 +20,7 @@ func init() {
 	flag.BoolVar(&flags.unique,          "u", false, "output only the first of an equal run")
 	flag.BoolVar(&flags.reverse,         "r", false, "reverse the result of comparisons")
 	flag.BoolVar(&flags.numeric,         "n", false, "compare according to string numerical value")
-	flag.UintVar(&flags.column,           "k", 0,     "sort by k column")
+	flag.UintVar(&flags.column,          "k", 0,     "sort by k column")
 	flag.StringVar(&output      ,        "o", "",    "write result to FILE instead of standard output")
 }
 
@@ -27,46 +29,61 @@ func main() {
 
 	handle(checkArgs())
 
-	lines, err := ReadLines(flag.Args()[0])
+	reader, err := getReader()
+	handle(err)
+
+	lines, err := ReadLines(reader)
 	handle(err)
 
 	sortedLines, err := Sorted(lines, flags)
 	handle(err)
 
-	handle(WriteLines(output, sortedLines))
+	writer, err := getWriter()
+	handle(WriteLines(writer, sortedLines))
 }
 
 func handle(err error) {
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 }
 
 func checkArgs() error {
-	if len(flag.Args()) != 1 {
+	if len(flag.Args()) > 1 {
 		flag.Usage()
-		return errors.New("flag.Args() != 1")
+		return errors.New("wrong usage: there must be no more than one argument")
 	}
 	return nil
 }
 
-func ReadLines(filename string) ([]string, error) {
-	content, err := ioutil.ReadFile(filename)
+func getReader() (io.Reader, error) {
+	if len(flag.Args()) == 1 {
+		return os.Open(flag.Args()[0])
+	}
+	return os.Stdin, nil
+}
+
+func getWriter() (io.Writer, error) {
+	if output == "" {
+		return os.Stdout, nil
+	}
+	return os.Create(output)
+}
+
+func ReadLines(reader io.Reader) ([]string, error) {
+	content, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
-	text := strings.Split(string(content), "\n")
-	if text[len(text) - 1] == "" {
-		text = text[:len(text) - 1]
+	lines := strings.Split(string(content), "\n")
+	if lines[len(lines) - 1] == "" {
+		lines = lines[:len(lines) - 1]
 	}
-	return text, nil
+	return lines, nil
 }
 
-func WriteLines(output string, text []string) error {
-	lines := strings.Join(text, "\n") + "\n"
-	if output != "" {
-		return ioutil.WriteFile(output, []byte(lines), 0644)
-	}
-	_, err := fmt.Print(lines)
+func WriteLines(writer io.Writer, lines []string) error {
+	text := strings.Join(lines, "\n") + "\n"
+	_, err := io.WriteString(writer, text)
 	return err
 }

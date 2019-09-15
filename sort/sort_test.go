@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"fmt"
+	"github.com/stretchr/testify/require"
+	"testing"
+)
 
 var linesIn1 = []string{
 	"Napkin",
@@ -88,23 +92,23 @@ func TestUsual(t *testing.T) {
 	in1 := linesIn1
 
 	out1_noflags, err := Sorted(in1, Flags{})
-	compareTestResult(out1_noflags, linesOut1_noflags, err, t, "Usual noflags")
+	require.Equal(t, linesOut1_noflags, out1_noflags, errMsg("nop", err))
 
 	out1_r, err := Sorted(in1, Flags{reverse:true})
-	compareTestResult(out1_r, linesOut1_r, err, t, "Usual -r")
+	require.Equal(t, linesOut1_r, out1_r, errMsg("-r", err))
 
 	out1_u, err := Sorted(in1, Flags{unique:true})
-	compareTestResult(out1_u, linesOut1_u, err, t, "Usual -u")
+	require.Equal(t, linesOut1_u, out1_u, errMsg("-u", err))
 
 	out1_uf, err := Sorted(in1, Flags{caseInsensitive:true, unique:true})
-	compareTestResult(out1_uf, linesOut1_uf, err, t, "Usual -u -f")
+	require.Equal(t, linesOut1_uf, out1_uf, errMsg("-u -f", err))
 }
 
 func TestNonTrivial(t *testing.T) {
 	in2 := linesIn2
 
 	out2_k1ufr, err := Sorted(in2, Flags{column:1, unique:true, caseInsensitive:true, reverse:true})
-	compareTestResult(out2_k1ufr, linesOut2_k1ufr, err, t, "NonTrivial -k=1 -u -f -r")
+	require.Equal(t, linesOut2_k1ufr, out2_k1ufr, errMsg("-k=1 -u -f -r", err))
 
 	out2_k2ufnr, err := Sorted(in2, Flags{
 		caseInsensitive: true,
@@ -113,44 +117,23 @@ func TestNonTrivial(t *testing.T) {
 		numeric:         true,
 		column:          2,
 	})
-	compareTestResult(out2_k2ufnr, linesOut2_k2ufnr, err, t, "NonTrivial -k=2 -u -f -n -r")
+	require.Equal(t, linesOut2_k2ufnr, out2_k2ufnr, errMsg("-k=2 -u -f -n -r", err))
 }
 
 func TestFail(t *testing.T) {
 	in2 := linesIn2
 
 	_, err := Sorted(in2, Flags{column:3})
-	checkFail(err, t, "Fail -k=3")
+	require.Error(t, err, errMsg("-k=3", err))
 
 	_, err = Sorted(in2, Flags{column:1, numeric:true, unique:true})
-	checkFail(err, t, "Fail -k=1 -u -n")
+	require.Error(t, err, errMsg("-k=1 -u -n", err))
 }
 
-func equal(s1, s2 []string) bool {
-	if len(s1) != len(s2) {
-		return false
-	}
-
-	for i := range s1 {
-		if s1[i] != s2[i] {
-			return false
-		}
-	}
-
-	return true
-}
-
-func compareTestResult(got, expected []string, err error, t *testing.T, testName string) {
+func errMsg(flags string, err error) string {
+	errStr := "nil"
 	if err != nil {
-		t.Errorf("Test%s failed: %s", testName, err)
+		errStr = err.Error()
 	}
-	if !equal(got, expected) {
-		t.Errorf("Test%s failed, result not match", testName)
-	}
-}
-
-func checkFail(err error, t *testing.T, testName string) {
-	if err == nil {
-		t.Errorf("Test%s failed: err is nil", testName)
-	}
+	return fmt.Sprintf("flags: %s [err is `%s`]", flags, errStr)
 }

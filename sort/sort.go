@@ -1,7 +1,7 @@
 package main
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -69,7 +69,7 @@ func extractColumn(mappedLines []StringMap, k uint) error {
 	for i := range mappedLines {
 		words := strings.Fields(mappedLines[i].key)
 		if len(words) < int(k) {
-			return errors.New(fmt.Sprint("Not enough columns in row ", i))
+			return errors.New(fmt.Sprint("not enough columns in row ", i))
 		}
 		mappedLines[i].key = words[k - 1]
 	}
@@ -109,7 +109,7 @@ func removeDuplicatesNumeric(mappedLines []StringMap) ([]StringMap, error) {
 	for _, line := range mappedLines {
 		f, err := strconv.ParseFloat(line.key, 64)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to parse float")
 		}
 		if _, was := used[f]; !was {
 			used[f] = true

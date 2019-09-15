@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/pkg/errors"
-	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -70,7 +69,7 @@ func extractColumn(mappedLines []StringMap, k uint) error {
 	for i := range mappedLines {
 		words := strings.Fields(mappedLines[i].key)
 		if len(words) < int(k) {
-			return errors.New(fmt.Sprint("not enough columns in row ", i))
+			return errors.Errorf("not enough columns in row %d", i)
 		}
 		mappedLines[i].key = words[k - 1]
 	}

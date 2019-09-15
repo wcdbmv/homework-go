@@ -29,8 +29,17 @@ func main() {
 
 	handle(checkArgs())
 
-	reader, err := getReader()
-	handle(err)
+	var (
+		reader io.Reader = os.Stdin
+		fin    *os.File
+		err    error
+	)
+	if len(flag.Args()) == 1 {
+		fin, err = os.Open(flag.Args()[0])
+		handle(err)
+		defer fin.Close()
+		reader = fin
+	}
 
 	lines, err := ReadLines(reader)
 	handle(err)
@@ -38,7 +47,17 @@ func main() {
 	sortedLines, err := Sorted(lines, flags)
 	handle(err)
 
-	writer, err := getWriter()
+	var (
+		writer io.Writer = os.Stdout
+		fout   *os.File
+	)
+	if output != "" {
+		fout, err = os.Create(output)
+		handle(err)
+		defer fout.Close()
+		writer = fout
+	}
+
 	handle(WriteLines(writer, sortedLines))
 }
 
@@ -54,13 +73,6 @@ func checkArgs() error {
 		return errors.New("wrong usage: there must be no more than one argument")
 	}
 	return nil
-}
-
-func getReader() (io.Reader, error) {
-	if len(flag.Args()) == 1 {
-		return os.Open(flag.Args()[0])
-	}
-	return os.Stdin, nil
 }
 
 func getWriter() (io.Writer, error) {

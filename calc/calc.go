@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	openBracket  byte = 40
-	closeBracket byte = 41
-	plus         byte = 43
-	minus        byte = 45
-	multiply     byte = 42
-	divide       byte = 47
+	openBracket  byte = '('
+	closeBracket byte = ')'
+	plus         byte = '+'
+	minus        byte = '-'
+	multiply     byte = '*'
+	divide       byte = '/'
 )
 
 func priority(operator byte) int {
@@ -101,6 +101,9 @@ func shuntingYard(infixExpr string) (postfixExpr string, err error) {
 		// okay, it must be an operator
 		operator, err := sreadOperator(reader)
 		if err != nil {
+			if err == io.EOF {
+				break
+			}
 			return "", errors.New("invalid format")
 		}
 

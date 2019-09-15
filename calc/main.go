@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"log"
@@ -10,10 +11,26 @@ import (
 func main() {
 	handle(checkArgs())
 
-	result, err := Calculate(os.Args[1])
-	handle(err)
+	if len(os.Args) == 2 {
+		result, err := Calculate(os.Args[1])
+		handle(err)
 
-	fmt.Println(result)
+		fmt.Println(result)
+		return
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		line, err := reader.ReadString('\n')
+		handle(err)  // handle only io err this
+
+		result, err := Calculate(line)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(result)
+		}
+	}
 }
 
 func handle(err error) {
@@ -23,9 +40,9 @@ func handle(err error) {
 }
 
 func checkArgs() error {
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: go run calc.go <expression>")
-		return errors.New("len(os.Args) != 2")
+	if len(os.Args) > 2 {
+		fmt.Println("Usage: go run calc.go [expression]")
+		return errors.New("len(os.Args) > 2")
 	}
 	return nil
 }

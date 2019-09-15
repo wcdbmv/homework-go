@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/pkg/errors"
 	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -128,6 +129,9 @@ func load(mappedLines []StringMap) []string {
 }
 
 func atof(str string) float64 {
-	f, _ := strconv.ParseFloat(str, 64)
+	f, err := strconv.ParseFloat(str, 64)
+	if err != nil {
+		log.Printf("failed to parse float: %s", err)
+	}
 	return f
 }

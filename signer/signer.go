@@ -25,15 +25,19 @@ func MakeSliceOfChanString(length int) []chan string {
 }
 
 func ExecutePipeline(jobs ...job) {
-	nJobs := len(jobs)
-	channels := MakeSliceOfChan(nJobs + 1)
+	wg := &sync.WaitGroup{}
+	in := make(chan interface{}, 1)
 	for i := range jobs {
+		out := make(chan interface{}, 1)
+		wg.Add(1)
 		go func(function job, in, out chan interface{}) {
+			defer wg.Done()
+			defer close(out)
 			function(in, out)
-			close(out)
-		}(jobs[i], channels[i], channels[i + 1])
+		}(jobs[i], in, out)
+		in = out
 	}
-	<-channels[nJobs]
+	wg.Wait()
 }
 
 func CombineResults(in, out chan interface{}) {
@@ -58,18 +62,18 @@ func DoHash(in, out chan interface{}, itoa Itoa, routine Routine) {
 	}
 }
 
+// so much love closures you know
+var mutex sync.Mutex
+func md5Consistency(data string) string {
+	mutex.Lock()
+	defer mutex.Unlock()
+	return DataSignerMd5(data)
+}
+
 func SingleHash(in, out chan interface{}) {
 	itoa := Itoa(func(input interface{}) string {
 		return strconv.Itoa(input.(int))
 	})
-
-	// so much love closures you know
-	mutex := make(chan struct{}, 1)
-	md5 := func(data string) string {
-		mutex <- struct{}{}
-		defer func() { <-mutex }()
-		return DataSignerMd5(data)
-	}
 
 	crc32Routine := func(out chan string, data string) {
 		out <- DataSignerCrc32(data)
@@ -81,7 +85,7 @@ func SingleHash(in, out chan interface{}) {
 		hashes := MakeSliceOfChanString(2)
 
 		go crc32Routine(hashes[0], data)
-		go crc32Routine(hashes[1], md5(data))
+		go crc32Routine(hashes[1], md5Consistency(data))
 
 		out <- <-hashes[0] + "~" + <-hashes[1]
 	})

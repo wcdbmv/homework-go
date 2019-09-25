@@ -8,14 +8,6 @@ import (
 	"sync"
 )
 
-func MakeSliceOfChan(length int) []chan interface{} {
-	channels := make([]chan interface{}, length)
-	for i := range channels {
-		channels[i] = make(chan interface{}, 1)
-	}
-	return channels
-}
-
 func MakeSliceOfChanString(length int) []chan string {
 	channels := make([]chan string, length)
 	for i := range channels {
